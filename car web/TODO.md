@@ -1,0 +1,6 @@
+- [x] Make website professional with better design and layout
+- [x] Add SEO optimization (meta tags, title, description, keywords)
+- [x] Improve content structure for better search visibility
+- [x] Add search bar to coin selector popup for filtering existing coins
+- [x] Update renderCoins() function to filter coins based on search input
+- [x] Test search functionality in browser

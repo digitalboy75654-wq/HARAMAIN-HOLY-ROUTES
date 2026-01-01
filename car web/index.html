@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Auto-Trader - Live Crypto Trading Analysis & Signals</title>
+    <meta name="description" content="Advanced AI-powered cryptocurrency trading analysis with live charts, support/resistance levels, and real-time buy/sell signals for BTC, ETH, SOL, and more. Professional trading insights.">
+    <meta name="keywords" content="crypto trading, AI trader, bitcoin analysis, ethereum signals, live charts, support resistance, trading signals, cryptocurrency, BTC USDT, ETH USDT">
+    <meta name="author" content="AI Auto-Trader">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="AI Auto-Trader - Live Crypto Trading Analysis">
+    <meta property="og:description" content="Advanced AI-powered cryptocurrency trading analysis with live charts and real-time signals.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://example.com/ai-trader-preview.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI Auto-Trader - Live Crypto Analysis">
+    <meta name="twitter:description" content="AI-powered trading signals and analysis for cryptocurrencies.">
+    <link rel="canonical" href="https://ai-autotrader.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "AI Auto-Trader",
+        "description": "Advanced AI-powered cryptocurrency trading analysis platform with live charts and signals",
+        "url": "https://ai-autotrader.com",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "AI Auto-Trader"
+        }
+    }
+    </script>
+    <style>
+        :root {
+            --bg: #0f1720;
+            --panel: #0b1220;
+            --muted: #98a0b3;
+            --accent: #5eead4;
+            --accent-2: #7dd3fc;
+            --card: #0f1724;
+            --glass: rgba(255,255,255,0.03);
+            --success: #16a34a;
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; background: linear-gradient(180deg,#071426 0%, #0b1220 100%); color: #e6eef8; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; display: flex; flex-direction: row; height: 100vh; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; position: relative; padding: 12px; }
+        .header-nav { height: 64px; background: transparent; display: flex; align-items: center; gap: 12px; padding: 8px 12px; justify-content: space-between; }
+        .site-title { font-size: 18px; font-weight: 800; color: var(--accent); text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .header-controls { display: flex; align-items: center; gap: 12px; }
+        .candle-timer { font-size: 12px; color: var(--muted); font-weight: 600; }
+        .favorites { font-size: 12px; color: var(--muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .selector-btn { background: linear-gradient(180deg,#0f1b2a,#09121b); color: #e6eef8; border: 1px solid rgba(255,255,255,0.04); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; box-shadow: 0 6px 18px rgba(2,6,23,0.6); transition: transform .12s ease, box-shadow .12s ease; position: relative; }
+        .selector-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(2,6,23,0.7); }
+        .selector-btn::after { content: "Click to add/select coin"; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+        .selector-btn:hover::after { opacity: 1; }
+        .badge { padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 800; text-transform: uppercase; background: rgba(255,255,255,0.03); color: var(--accent-2); }
+        .buy-sig { background: linear-gradient(90deg,#064e3b,#10b981); color: white; }
+        .sell-sig { background: linear-gradient(90deg,#7f1d1d,#ef4444); color: white; }
+
+        #chart { flex: 1; width: 100%; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(2,6,23,0.6); background: var(--card); }
+
+        .ai-panel { width: 380px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); display: flex; flex-direction: column; border-left: 1px solid rgba(255,255,255,0.03); padding: 8px; gap: 8px; }
+        .ai-head { padding: 12px; border-radius: 10px; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); font-weight: 700; color: var(--accent-2); display: flex; justify-content: space-between; align-items: center; box-shadow: inset 0 -1px 0 rgba(255,255,255,0.02); }
+        .chat-view { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+
+        .msg { padding: 12px; border-radius: 12px; font-size: 13px; line-height: 1.5; max-width: 100%; word-wrap: break-word; background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.02); }
+        .bot { border-left: 4px solid var(--accent); color: #dbeafe; }
+        .auto-tag { font-size: 10px; color: var(--accent); font-weight: 800; margin-bottom: 6px; display: block; }
+
+        .input-area { padding: 12px; background: transparent; border-top: 1px solid rgba(255,255,255,0.02); }
+
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2,6,23,0.7); z-index: 200; justify-content: center; align-items: flex-start; padding-top: 60px; }
+        .popup-box { width: 320px; background: rgba(255,255,255,0.02); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.02); }
+        .item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.01); color: #e6eef8; }
+
+        .prob-box { margin-top: 8px; padding: 8px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.02); border-radius: 8px; font-size: 13px; display: flex; gap: 12px; align-items: center; }
+        .prob-num { font-weight:800; }
+        .prob-high { color: var(--accent); }
+        .prob-low { color: var(--danger); }
+
+        .highlight-buyers { background: linear-gradient(90deg, rgba(94,234,212,0.08), rgba(125,211,252,0.06)); color: var(--accent); padding: 2px 6px; border-radius: 6px; font-weight:700; }
+        .highlight-sellers { background: linear-gradient(90deg, rgba(255,154,154,0.06), rgba(254,202,202,0.03)); color: var(--danger); padding: 2px 6px; border-radius: 6px; font-weight:700; }
+        .chat-heading { color: #ffd166; font-weight: 700; font-size: 14px; margin: 8px 0 4px 0; }
+        .chat-what { color: #5eead4; font-weight: 600; }
+        .chat-why { color: #7dd3fc; font-weight: 600; }
+        .chat-plan { color: #ffd166; font-weight: 600; }
+        .chat-levels { color: #10b981; font-weight: 600; }
+        .chat-text { color: #dbeafe; line-height: 1.6; }
+        .chat-symbol { color: #f59e0b; font-weight: 700; }
+        .chat-timeframe { color: #8b5cf6; font-weight: 600; }
+        .chat-buyers-dominating { background: linear-gradient(90deg, rgba(34,197,94,0.1), rgba(16,185,129,0.15)); color: #10b981; padding: 2px 6px; border-radius: 6px; font-weight: 600; border: 1px solid rgba(16,185,129,0.3); }
+        /* Show per-message probability box under each AI message */
+        .msg .prob-box { display: flex; margin-top: 8px; padding: 6px; background: rgba(255,255,255,0.015); border-radius: 8px; gap: 10px; align-items: center; }
+        .msg .prob-box div { font-size: 12px; color: var(--muted); }
+        .msg .prob-box .prob-num { font-weight: 800; color: #fff; }
+
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            .main-content { flex: 1; order: 1; }
+            .ai-panel { width: 100%; order: 2; max-height: 40vh; }
+            .chat-view { max-height: 30vh; overflow-y: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-content">
+        <div class="header-nav">
+            <div class="site-title">AI Auto-Trader</div>
+            <div class="header-controls">
+                <button class="selector-btn" id="coin-btn" onclick="showPop('coin-pop')">BTCUSDT ▾</button>
+                <button class="selector-btn" id="tf-btn" onclick="showPop('tf-pop')">1m ▾</button>
+                <button class="selector-btn" onclick="share()">Share</button>
+                <div id="candle-timer" class="candle-timer">Next: --:--</div>
+                <div id="ai-signal" class="badge">ANALYZING...</div>
+            </div>
+        </div>
+        <div id="chart"></div>
+    </div>
+
+    <div class="ai-panel">
+        <div class="ai-head">
+            <span>🚀 Live AI Insight</span>
+            <div id="status-dot" style="width: 10px; height: 10px; background: grey; border-radius: 50%;"></div>
+        </div>
+        <div class="chat-view" id="chat-box">
+        </div>
+        <div class="input-area">
+        </div>
+    </div>
+
+    <div class="overlay" id="coin-pop" onclick="hidePop()">
+        <div class="popup-box" onclick="event.stopPropagation()">
+            <input type="text" id="coin-search" placeholder="Search coins..." style="width: 100%; padding: 10px; border: none; border-bottom: 1px solid rgba(255,255,255,0.1); background: transparent; color: #e6eef8; font-size: 14px; outline: none;" oninput="filterCoins()">
+            <div id="coin-list"></div>
+        </div>
+    </div>
+    <div class="overlay" id="tf-pop" onclick="hidePop()">
+        <div class="popup-box" id="tf-list"></div>
+    </div>
+
+    <script>
+        const tfs = ['1m','3m','5m','15m','30m','1h','2h','4h','6h','8h','12h','1d','3d','1w','1M'];
+        let coins = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','LTCUSDT','LINKUSDT','DOTUSDT','AVAXUSDT','MATICUSDT','UNIUSDT','AAVEUSDT','SUSHIUSDT','CAKEUSDT','ICPUSDT','FILUSDT','TRXUSDT','ETCUSDT'];
+        let favoriteCoins = JSON.parse(localStorage.getItem('favoriteCoins') || '["BTCUSDT","ETHUSDT"]');
+        let favoriteTFs = JSON.parse(localStorage.getItem('favoriteTFs') || '["1m","5m","1h","1d"]');
+        let curSymbol = localStorage.getItem('selectedSymbol') || 'BTCUSDT';
+        let curTF = localStorage.getItem('selectedTimeframe') || '1m';
+        let socket;
+        let ohlcData = [];
+        let autoInterval;
+        let timerInterval;
+
+        const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+            layout: { backgroundColor: '#0b0e11', textColor: '#d1d4dc' },
+            grid: { vertLines: { color: '#1e222d' }, horzLines: { color: '#1e222d' } },
+            rightPriceScale: { borderColor: '#2B2B43' },
+            timeScale: { timeVisible: true, borderColor: '#2B2B43' }
+        });
+        const series = chart.addCandlestickSeries({ upColor: '#26a69a', downColor: '#ef5350' });
+
+        window.onload = () => {
+            updateChart();
+        };
+
+        function saveKey(val) { localStorage.setItem('gemini_api_key', val); location.reload(); }
+
+        async function updateChart() {
+            if(socket) socket.close();
+            if(timerInterval) clearInterval(timerInterval);
+            document.getElementById('coin-btn').innerText = curSymbol;
+            document.getElementById('tf-btn').innerText = curTF;
+
+            // Fetch historical data for the last 1 week
+            const now = Date.now();
+            const oneWeekAgo = now - (7 * 24 * 60 * 60 * 1000); // 1 week in milliseconds
+            let allData = [];
+            let earliestTime = now;
+
+            // Fetch data in batches of 1000 candles, starting from most recent
+            while (allData.length < 10080 && earliestTime > oneWeekAgo) { // Max 10080 candles (1 week of 1m data)
+                const url = `https://api.binance.com/api/v3/klines?symbol=${curSymbol}&interval=${curTF}&limit=1000${earliestTime < now ? `&endTime=${earliestTime}` : ''}`;
+                const res = await fetch(url);
+                const raw = await res.json();
+                if (raw.length === 0) break;
+
+                const batchData = raw.map(d => ({ time: d[0]/1000, open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4]) }));
+                allData = batchData.concat(allData); // Prepend to get chronological order
+                earliestTime = raw[0][0] - 1; // Set earliestTime to just before the first candle in this batch
+
+                // Stop if we've gone back far enough
+                if (raw[0][0] < oneWeekAgo) break;
+            }
+
+            ohlcData = allData;
+            series.setData(ohlcData);
+
+            // Calculate and add support/resistance lines
+            const slice = ohlcData.slice(Math.max(0, ohlcData.length-20));
+            const highs = slice.map(d => d.high);
+            const lows = slice.map(d => d.low);
+            const resistance = Math.max(...highs);
+            const support = Math.min(...lows);
+
+            series.createPriceLine({
+                price: resistance,
+                color: '#ef4444',
+                lineWidth: 2,
+                lineStyle: LightweightCharts.LineStyle.Solid,
+                axisLabelVisible: true,
+                title: 'Resistance'
+            });
+
+            series.createPriceLine({
+                price: support,
+                color: '#10b981',
+                lineWidth: 2,
+                lineStyle: LightweightCharts.LineStyle.Solid,
+                axisLabelVisible: true,
+                title: 'Support'
+            });
+
+            // Analyze the last closed candle on chart load
+            if(ohlcData.length >= 5) {
+                const aiReply = analyzeMarket(ohlcData);
+                addAiMessage(aiReply);
+            }
+
+
+
+            socket = new WebSocket(`wss://stream.binance.com:9443/ws/${curSymbol.toLowerCase()}@kline_${curTF}`);
+            socket.onmessage = e => {
+                const k = JSON.parse(e.data).k;
+                const candle = { time: k.t/1000, open: parseFloat(k.o), high: parseFloat(k.h), low: parseFloat(k.l), close: parseFloat(k.c) };
+                series.update(candle);
+                if(k.x) {
+                    ohlcData.push(candle);
+                    updateProbBox(ohlcData);
+                    if(ohlcData.length >= 5) {
+                        const aiReply = analyzeMarket(ohlcData);
+                        addAiMessage(aiReply);
+                    }
+                }
+            };
+
+            // Start candle timer
+            startCandleTimer();
+        }
+
+        function startCandleTimer() {
+            if(timerInterval) clearInterval(timerInterval);
+            const now = new Date();
+            const nextClose = getNextCandleClose(now, curTF);
+            timerInterval = setInterval(() => {
+                const remaining = Math.max(0, nextClose - new Date());
+                const hours = Math.floor(remaining / 3600000);
+                const minutes = Math.floor((remaining % 3600000) / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                const timeStr = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                document.getElementById('candle-timer').innerText = `Next: ${timeStr}`;
+                if(remaining <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('candle-timer').innerText = 'Next: 00:00:00';
+                }
+            }, 1000);
+        }
+
+        function getNextCandleClose(now, tf) {
+            const match = tf.match(/^(\d+)([mhdwM])$/);
+            if(!match) return now;
+            const num = parseInt(match[1]);
+            const unit = match[2];
+            let ms;
+            switch(unit) {
+                case 'm': ms = num * 60 * 1000; break;
+                case 'h': ms = num * 60 * 60 * 1000; break;
+                case 'd': ms = num * 24 * 60 * 60 * 1000; break;
+                case 'w': ms = num * 7 * 24 * 60 * 60 * 1000; break;
+                case 'M': ms = num * 30 * 24 * 60 * 60 * 1000; break; // approximate
+                default: ms = 60 * 1000;
+            }
+            const next = new Date(Math.ceil(now.getTime() / ms) * ms);
+            return next;
+        }
+
+        // --- THE BRAIN: AUTO ANALYZER ---
+        async function startAutoAnalysis() {
+            if(autoInterval) clearInterval(autoInterval);
+            
+            autoInterval = setInterval(async () => {
+                // Legacy stub: network-based Gemini calls removed. Local analyzer runs on candle close.
+
+            }, 30000); // 30 seconds delay
+        }
+
+        // Local heuristic analyzer: runs on every closed candle
+        function analyzeMarket(data) {
+            const len = data.length;
+            if(len < 3) return "Data kam hai — wait for more candles.";
+            const last = data[len-1];
+            const prev = data[len-2];
+            const slice = data.slice(Math.max(0, len-20));
+            const highs = slice.map(d => d.high);
+            const lows = slice.map(d => d.low);
+            const closes = slice.map(d => d.close);
+            const high20 = Math.max(...highs);
+            const low20 = Math.min(...lows);
+            const resistance = high20;
+            const support = low20;
+            const avg = closes.reduce((a,b)=>a+b,0)/closes.length;
+            const trend = last.close > prev.close ? 'UP' : 'DOWN';
+            const pct = ((last.close - prev.close)/prev.close)*100;
+
+            let what = '';
+            let why = '';
+            let plan = '';
+
+            // What is the market doing?
+            if(Math.abs(pct) > 0.7) {
+                what = pct > 0 ? 'Market is in a strong upward move.' : 'Market is experiencing a sharp downward drop.';
+            } else if(last.close > avg) {
+                what = 'Price is above the average, showing bullish sentiment.';
+            } else if(last.close < avg) {
+                what = 'Price is below the average, indicating bearish pressure.';
+            } else {
+                what = 'Market is moving sideways in a range.';
+            }
+
+            // Why is it doing that?
+            if(Math.abs(pct) > 0.7) {
+                why = pct > 0 ? 'This is due to strong buying momentum and positive sentiment.' : 'This is caused by heavy selling pressure and negative sentiment.';
+            } else if(last.close > avg) {
+                why = 'Buyers are dominating, pushing the price higher than recent averages.';
+            } else if(last.close < avg) {
+                why = 'Sellers are active, pulling the price below recent averages.';
+            } else {
+                why = 'Neither buyers nor sellers have clear control, leading to consolidation.';
+            }
+
+            // Check proximity to support/resistance
+            const pctToRes = Math.abs(last.close - resistance) / resistance;
+            const pctToSup = Math.abs(last.close - support) / support;
+            if(pctToRes < 0.005) {
+                what += ' Currently testing resistance.';
+                why += ' Resistance acts as a barrier where selling interest increases.';
+                plan = 'Watch for a potential breakout above resistance or rejection leading to a pullback.';
+            } else if(pctToSup < 0.005) {
+                what += ' Currently testing support.';
+                why += ' Support provides a floor where buying interest strengthens.';
+                plan = 'Watch for a potential bounce off support or breakdown below it.';
+            } else {
+                plan = 'Monitor for approach to support or resistance levels for key decision points.';
+            }
+
+            return `Market Analysis for ${curSymbol} (${curTF}):\nWhat: ${what}\nWhy: ${why}\nFuture Plan: ${plan}`;
+        }
+
+        // Compute simple buy/sell probabilities (heuristic)
+        function computeProbabilities(data) {
+            const len = data.length;
+            if(len < 3) return { buy: 50, sell: 50 };
+            const last = data[len-1];
+            const prev = data[len-2];
+            const slice = data.slice(Math.max(0, len-20));
+            const closes = slice.map(d => d.close);
+            const avg = closes.reduce((a,b)=>a+b,0)/closes.length;
+            const pct = ((last.close - prev.close)/prev.close) * 100;
+
+            // base score
+            let buyScore = 50;
+            // bias by relation to average
+            if(last.close > avg) buyScore += 15; else buyScore -= 10;
+            // bias by short-term momentum
+            if(pct > 0.4) buyScore += 18;
+            else if(pct > 0.1) buyScore += 8;
+            else if(pct < -0.4) buyScore -= 18;
+            else if(pct < -0.1) buyScore -= 8;
+
+            // small adjustment for volatility (range)
+            const high = Math.max(...slice.map(d=>d.high));
+            const low = Math.min(...slice.map(d=>d.low));
+            const range = (high - low) / (avg || 1);
+            if(range > 0.02) buyScore += 5; // trending with volatility
+
+            // adjust for proximity to support/resistance
+            const resistance = high;
+            const support = low;
+            const pctToRes = Math.abs(last.close - resistance) / resistance;
+            const pctToSup = Math.abs(last.close - support) / support;
+            if(pctToSup < 0.005) buyScore += 10;
+            if(pctToRes < 0.005) buyScore -= 10;
+
+            // clamp and normalize
+            buyScore = Math.max(5, Math.min(95, Math.round(buyScore)));
+            const sellScore = 100 - buyScore;
+            return { buy: buyScore, sell: sellScore };
+        }
+
+        function updateProbBox(data) {
+            const box = document.getElementById('prob-box');
+            const buyEl = document.getElementById('buy-pct');
+            const sellEl = document.getElementById('sell-pct');
+            if(!box || !buyEl || !sellEl) return;
+            const p = computeProbabilities(data);
+            buyEl.innerText = p.buy + '%';
+            sellEl.innerText = p.sell + '%';
+            // colorize
+            if(p.buy > p.sell) { buyEl.classList.add('prob-high'); buyEl.classList.remove('prob-low'); sellEl.classList.add('prob-low'); sellEl.classList.remove('prob-high'); }
+            else if(p.sell > p.buy) { sellEl.classList.add('prob-high'); sellEl.classList.remove('prob-low'); buyEl.classList.add('prob-low'); buyEl.classList.remove('prob-high'); }
+            else { buyEl.classList.remove('prob-high','prob-low'); sellEl.classList.remove('prob-high','prob-low'); }
+        }
+
+        function addAiMessage(text) {
+            const chatBox = document.getElementById('chat-box');
+            // Remove any previous auto-update messages (preserve system/init messages)
+            document.querySelectorAll('.msg.bot').forEach(node => {
+                if(node.querySelector('.auto-tag')) node.remove();
+            });
+
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            // Simple friendly message format (compact, plain)
+            const header = `<div style="color:#ffd166;font-weight:700;margin-bottom:6px;">Hey! Quick update:</div>`;
+            let safeText = String(text).replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+            // highlight the exact phrases about buyers/sellers in friendly, colorful pills
+            safeText = safeText.replace(/(buyers halke se dominate kar rahe hain)/ig, '<span class="highlight-buyers">$1</span>')
+                               .replace(/(sellers thode active hain)/ig, '<span class="highlight-sellers">$1</span>')
+                               .replace(/Buyers are dominating, pushing the price higher than recent averages\./g, '<span class="chat-buyers-dominating">$&</span>');
+
+            // compute probabilities for this message and render a small box under the chat bubble
+            let probHtml = '';
+            try {
+                const p = computeProbabilities(window.ohlcData || ohlcData || []);
+                probHtml = `<div class="prob-box" style="margin-top:8px;">
+                    <div>Buy: <span class="prob-num ${p.buy>p.sell?'prob-high':'prob-low'}">${p.buy}%</span></div>
+                    <div>Sell: <span class="prob-num ${p.sell>p.buy?'prob-high':'prob-low'}">${p.sell}%</span></div>
+                </div>`;
+            } catch (e) { probHtml = ''; }
+
+            chatBox.innerHTML = `<div class="msg bot">
+                <span class="auto-tag">LIVE ANALYSIS • ${time}</span>
+                ${header}<div>${safeText}</div>
+                ${probHtml}
+            </div>` + chatBox.innerHTML; // Latest message on top
+
+            // UI Signal update based on text keywords
+            const badge = document.getElementById('ai-signal');
+            if(text.toLowerCase().includes("buy") || text.toLowerCase().includes("bullish")) {
+                badge.innerText = "BULLISH"; badge.className = "badge buy-sig";
+            } else if(text.toLowerCase().includes("sell") || text.toLowerCase().includes("bearish")) {
+                badge.innerText = "BEARISH"; badge.className = "badge sell-sig";
+            } else {
+                badge.innerText = "ANALYZING..."; badge.className = "badge";
+            }
+        }
+
+        // UI Helpers
+        function showPop(id) {
+            document.getElementById(id).style.display = 'flex';
+            if(id === 'coin-pop') renderCoins(); else renderTFs();
+        }
+        function hidePop() { document.querySelectorAll('.overlay').forEach(o=>o.style.display='none'); }
+        function renderCoins(filter = '') {
+            const allCoins = [...favoriteCoins, ...coins.filter(c => !favoriteCoins.includes(c))];
+            const filteredCoins = allCoins.filter(c => c.toLowerCase().includes(filter.toLowerCase()));
+            document.getElementById('coin-list').innerHTML = filteredCoins.map(c => {
+                const isFav = favoriteCoins.includes(c);
+                return `<div class="item" onclick="selectCoin('${c}')" style="display:flex;justify-content:space-between;align-items:center;">
+                    <b>${c}</b>
+                    <span onclick="event.stopPropagation(); toggleFavorite('coin', '${c}')" style="cursor:pointer;color:${isFav?'#ffd700':'#666'};font-size:14px;">★</span>
+                </div>`;
+            }).join('');
+        }
+
+        function filterCoins() {
+            const searchValue = document.getElementById('coin-search').value;
+            renderCoins(searchValue);
+        }
+        function renderTFs() {
+            const allTFs = [...favoriteTFs, ...tfs.filter(t => !favoriteTFs.includes(t))];
+            document.getElementById('tf-list').innerHTML = allTFs.map(t => {
+                const isFav = favoriteTFs.includes(t);
+                return `<div class="item" onclick="selectTimeframe('${t}')" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span>${t}</span>
+                    <span onclick="event.stopPropagation(); toggleFavorite('tf', '${t}')" style="cursor:pointer;color:${isFav?'#ffd700':'#666'};font-size:14px;">★</span>
+                </div>`;
+            }).join('');
+        }
+
+        function toggleFavorite(type, item) {
+            if(type === 'coin') {
+                if(favoriteCoins.includes(item)) {
+                    favoriteCoins = favoriteCoins.filter(c => c !== item);
+                } else {
+                    favoriteCoins.push(item);
+                }
+                localStorage.setItem('favoriteCoins', JSON.stringify(favoriteCoins));
+            } else if(type === 'tf') {
+                if(favoriteTFs.includes(item)) {
+                    favoriteTFs = favoriteTFs.filter(t => t !== item);
+                } else {
+                    favoriteTFs.push(item);
+                }
+                localStorage.setItem('favoriteTFs', JSON.stringify(favoriteTFs));
+            }
+            if(type === 'coin') renderCoins(); else renderTFs();
+        }
+
+        function selectCoin(symbol) {
+            curSymbol = symbol;
+            localStorage.setItem('selectedSymbol', symbol);
+            updateChart();
+            hidePop();
+        }
+
+        function selectTimeframe(tf) {
+            curTF = tf;
+            localStorage.setItem('selectedTimeframe', tf);
+            updateChart();
+            hidePop();
+        }
+
+        function share() {
+            const url = window.location.href;
+            const title = `AI Auto-Trader - ${curSymbol} (${curTF})`;
+            const text = `Check out this live crypto analysis for ${curSymbol} on ${curTF} timeframe! 🚀`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: text,
+                    url: url
+                }).catch(console.error);
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(`${text} ${url}`).then(() => {
+                    alert('Link copied to clipboard!');
+                }).catch(() => {
+                    alert('Sharing not supported on this device.');
+                });
+            }
+        }
+
+    </script>
+</body>
+</html>
